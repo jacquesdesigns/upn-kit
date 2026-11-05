@@ -26,7 +26,7 @@ One add-on for your own Claude Code. You install it from a short prompt (Prompt 
 - When you correct it ("I told you", "from now on"), it saves that as a rule before carrying on.
 
 **It remembers.**
-- At the start of every session it brings in the job in hand (its `NOW.md`), the recent jobs, the rules you have taught it, and any handover waiting from a conversation that ran long.
+- At the start of every session it brings in the job you opened (its `NOW.md`; at the brain root it lists the recent jobs and loads none), the rules you have taught it, and any handover waiting from a conversation that ran long.
 - It tells you the real context fill. At 15% it saves a checkpoint. At 25% it writes the handover note and tells you to start a new conversation; the new one picks up from the note.
 - Search the whole brain in a moment: memory, wiki, every `NOW.md`, the nightly notes, and an index of your Dropbox job folders (names and dates only, never contents). "Where is the Oman job?" is one search.
 - A small health check runs at the start of each session and prints one red line for each fault: the memory index too big, two competing indexes, memory pointing at files that are gone, em dashes in new wiki pages, the Dropbox copy not running, the memory folder missing from the copy.
