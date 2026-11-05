@@ -166,6 +166,22 @@ def is_user_prompt(entry):
     return bool(t) and not t.startswith("<")
 
 
+# A prompt Claude Code or another session typed, not the person: a subagent or agent report, a task notification,
+# another session's message, a plugin message, hook output, command output, a compaction summary. Hooks that react to
+# the person's words (look-first, catch) stay quiet on these. Matched at the start of the prompt only.
+MACHINE = re.compile(
+    r"^\s*(?:<(?:task-notification|agent-message|teammate-message|cross-session-message|system-reminder|"
+    r"local-command-stdout|local-command-stderr|local-command-caveat|bash-input|bash-stdout|bash-stderr|"
+    r"user-prompt-submit-hook)\b|\[Subagent hand-back\]|Another Claude session sent a message|"
+    r"The [\w .-]+ plugin sent a message|This session is being continued from a previous conversation|"
+    r"Stop hook feedback|[\w-]+ hook (?:feedback|output|error)|Caveat: The messages below were generated)")
+
+
+def is_machine(text):
+    """True when the prompt is a machine message (see MACHINE), not something the person typed."""
+    return bool(MACHINE.match(text or ""))
+
+
 def deny(reason):
     emit({"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny",
                                  "permissionDecisionReason": reason}})

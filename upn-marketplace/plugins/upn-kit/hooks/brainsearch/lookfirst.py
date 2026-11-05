@@ -7,16 +7,21 @@ and prints at most 5 lines to stdout, which Claude Code adds to the context:
 
   LOOK FIRST (brain-search, ranked, newest boosted): <date> <path>: <snippet>
 
-Otherwise it prints nothing. It never fails the prompt: every error ends in exit 0 with no output.
+Otherwise it prints nothing. It never fires on a machine message (_lib.MACHINE: agent reports, task notifications,
+hook output, compaction summaries). Each block it prints adds one line to lookfirst-hits.log in the kit folder
+(time, session, lines, first path), so the one-month report can count whether it earns its place. It never fails the prompt: every error ends in exit 0 with no output.
 Pure standard library, no model call, a few tens of milliseconds.
 """
 import json
 import re
 import sys
+import time
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
+sys.path.insert(1, str(HERE.parent))
+import _lib  # noqa: E402  (hooks/_lib.py: the shared machine-message pattern and the kit folder)
 
 PREFIX = "LOOK FIRST (brain-search, ranked, newest boosted): "
 MAX_LINES = 5
@@ -72,7 +77,7 @@ def content_words(prompt):
 
 
 def lines_for(prompt):
-    if not prompt or not prompt.strip() or not is_about_the_past(prompt):
+    if not prompt or not prompt.strip() or _lib.is_machine(prompt) or not is_about_the_past(prompt):
         return []
     import search
     words = content_words(prompt)
@@ -90,18 +95,35 @@ def lines_for(prompt):
     return out
 
 
+HITS = "lookfirst-hits.log"
+
+
+def count_hit(session_id, out):
+    """One line per LOOK FIRST block in the kit folder: local time, session, how many lines, the first path offered."""
+    try:
+        first = out[0][len(PREFIX):].split(" ", 1)[1].split(": ", 1)[0]
+        _lib.DATA.mkdir(parents=True, exist_ok=True)
+        with open(_lib.DATA / HITS, "a", encoding="utf-8") as f:
+            f.write("%s %s %d %s\n" % (time.strftime("%Y-%m-%dT%H:%M:%S"),
+                                       re.sub(r"[^A-Za-z0-9]", "", session_id or "")[:8] or "-", len(out), first))
+    except Exception:
+        pass
+
+
 def main():
     try:
         raw = sys.stdin.read()
-        prompt = ""
+        prompt, sid = "", ""
         if raw.strip():
             try:
                 data = json.loads(raw)
                 prompt = data.get("prompt", "") if isinstance(data, dict) else ""
+                sid = data.get("session_id", "") if isinstance(data, dict) else ""
             except ValueError:
                 prompt = raw
         out = lines_for(str(prompt))
         if out:
+            count_hit(str(sid), out)
             try:
                 sys.stdout.reconfigure(encoding="utf-8")
             except Exception:
