@@ -4,9 +4,9 @@ For James and Jeremy. Plain English, one page.
 
 ## Install in three steps
 
-1. **Get the kit.** Open PowerShell and paste this one line (it copies the kit into your user folder; if a GitHub sign-in window opens, sign in with the account Louis added):
+1. **Get the kit.** Open PowerShell and paste this one line (it copies the kit into your user folder; no sign-in is needed):
    `git clone https://github.com/jacquesdesigns/upn-kit.git "$env:USERPROFILE\upn-kit"`
-   No Git yet? `winget install Git.Git`, then close and reopen PowerShell. No GitHub access? Unzip `upn-kit.zip` from the Dropbox link into your user folder instead, so you have `upn-kit\upn-marketplace`.
+   No Git yet? `winget install Git.Git`, then close and reopen PowerShell. If GitHub is blocked on your network, unzip `upn-kit.zip` from the Dropbox link into your user folder instead, so you have `upn-kit\upn-marketplace`.
 2. **Prompt 1.** Open your second brain folder in VS Code, start a new Claude conversation and paste everything below the line in `PROMPT-1.md`. Answer its yes or no questions. It makes the save point first. Nothing is deleted.
 3. **Prompt 2.** Start another new conversation and paste everything below the line in `PROMPT-2.md`. It installs the kit, tests every piece and makes a small report zip for Louis.
 

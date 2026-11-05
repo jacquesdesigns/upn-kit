@@ -1,6 +1,6 @@
 # PROMPT 2: install the UPN kit
 
-Do Prompt 1 first. Install on your main computer first, then do the same on the other computer (Prompt 1 and Prompt 2 again; Prompt 1 skips the parts that belong to the main computer). Get the kit into `%USERPROFILE%\upn-kit` (so that the folder `%USERPROFILE%\upn-kit\upn-marketplace` exists; not inside the brain, not inside Dropbox): in PowerShell, `git clone https://github.com/jacquesdesigns/upn-kit.git "$env:USERPROFILE\upn-kit"` (sign in with the GitHub account Louis added if a window asks). Fallback, if the clone cannot reach GitHub: unzip `upn-kit.zip` from the Dropbox link into the same place. Open the brain folder in VS Code, start a new Claude conversation, and paste everything below the line.
+Do Prompt 1 first. Install on your main computer first, then do the same on the other computer (Prompt 1 and Prompt 2 again; Prompt 1 skips the parts that belong to the main computer). Get the kit into `%USERPROFILE%\upn-kit` (so that the folder `%USERPROFILE%\upn-kit\upn-marketplace` exists; not inside the brain, not inside Dropbox): in PowerShell, `git clone https://github.com/jacquesdesigns/upn-kit.git "$env:USERPROFILE\upn-kit"` (no sign-in is needed). Fallback, if the clone cannot reach GitHub: unzip `upn-kit.zip` from the Dropbox link into the same place. Open the brain folder in VS Code, start a new Claude conversation, and paste everything below the line.
 
 ---
 
