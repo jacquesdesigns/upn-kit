@@ -8,6 +8,7 @@ You are going to install the UPN kit for me and prove each piece works. The kit 
 
 - Explain each step in one plain sentence first. I am not technical.
 - Ask me "yes or no" before installing software, moving files, switching anything off or registering a scheduled task. Reading and listing need no question.
+- When I have to type something (a command such as `/reload-plugins` or `/context`, a number, a path), ask in plain text in your reply, never with a question form: the form hides the box I type in. Say "type it, then tell me", and wait.
 - In Dropbox you may only read and save new files; never overwrite, edit, move, rename or delete anything there (the kit enforces this). `20. RAW` is read-only, no new files either. Never sign in to anything for me; if a sign-in is needed, tell me exactly what to click and wait.
 - Nothing is deleted: anything replaced is moved to a folder you name to me.
 - British English. No em dashes, no double dashes.
@@ -42,11 +43,11 @@ The kit replaces the nine studio skills I was given on 2 October. If any of `stu
 0. If `%USERPROFILE%\upn-kit\.git` exists (the kit came from `git clone`), run `git -C "%USERPROFILE%\upn-kit" pull` so it is the newest, and show me `git -C "%USERPROFILE%\upn-kit" log --oneline -1` for the report. If it came from the zip, skip this.
 1. `claude plugin marketplace add "%USERPROFILE%\upn-kit\upn-marketplace"`
 2. `claude plugin install upn-kit@upn-marketplace`
-3. `claude plugin list` must show `upn-kit` enabled. Then tell me to type `/reload-plugins` (or close and reopen the Claude panel), and wait.
+3. `claude plugin list` must show `upn-kit` enabled. Then, in plain text (not a question form), tell me: "type `/reload-plugins` (or close and reopen the Claude panel), then tell me", and wait.
 
 ## Step 4: settings the kit reads
 
-Open `%USERPROFILE%\.claude\upn-kit\config.json` (Prompt 1 made it; the kit fills in `kit_root` and `python_exe` by itself the first time a session starts). Make sure it has: `brain`, `memory_dirs`, `mirror_task`, `mirror_script`, `dropbox_roots`, plus `home` (my Studio folder, normally `%USERPROFILE%\Studio`), `python` (the full path of `%USERPROFILE%\.claude\upn-kit\venv\Scripts\python.exe`), and `context_window`. For `context_window`: ask me to type `/context` and tell you the total number it shows (for example 200k or 1M); write 200000 or 1000000. Show me the file.
+Open `%USERPROFILE%\.claude\upn-kit\config.json` (Prompt 1 made it; the kit fills in `kit_root` and `python_exe` by itself the first time a session starts). Make sure it has: `brain`, `memory_dirs`, `mirror_task`, `mirror_script`, `dropbox_roots`, plus `home` (my Studio folder, normally `%USERPROFILE%\Studio`), `python` (the full path of `%USERPROFILE%\.claude\upn-kit\venv\Scripts\python.exe`), and `context_window`. For `context_window`: in plain text (not a question form), ask me to type `/context`, then tell you the total number it shows (for example 200k or 1M); write 200000 or 1000000. Show me the file.
 
 Then, if my brain's `CLAUDE.md` does not already have a section called "HOW THINGS ARE KEPT", show me `%USERPROFILE%\upn-kit\CLAUDE-SNIPPET.md` and, after my yes, add it at the end of `CLAUDE.md`. Do not rewrite anything else in that file.
 

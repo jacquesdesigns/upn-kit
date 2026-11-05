@@ -9,6 +9,7 @@ You are going to get my brain ready for a new working kit. Work through the step
 - Explain each step in one plain sentence before you do it. I am not technical.
 - Nothing is deleted. Anything that moves goes to an archive folder, and you tell me where.
 - Ask me "yes or no" before anything that moves, switches off or changes a file, and show me exactly what will change first. Reading and listing need no question.
+- When I have to type something back (a name, an email, a path, or a command such as `/context`), ask in plain text in your reply, never with a question form: the form hides the box I type in. Say "type it, then tell me", and wait.
 - In Dropbox you may only read, and save new files; never overwrite, edit, move, rename or delete anything there. `20. RAW` is read-only. The only Dropbox-related change in this job is to my own mirror script, and only after I say yes.
 - British English. No em dashes, no double dashes, in anything you write.
 - After each step run one test, show me what it printed, and say PASS or FAIL. If a step fails, stop and tell me; do not work around it.
@@ -19,9 +20,13 @@ You are going to get my brain ready for a new working kit. Work through the step
 
 Run and show me: `python --version` (or `py --version`), `git --version`, `node --version`, `claude --version`. Say which of them are missing; do not install anything yet. Then tell me: the full path of this brain folder, whether it sits inside Dropbox or OneDrive (it must not), and how big it is (files and gigabytes). Find my Claude memory folder (it lives under `%USERPROFILE%\.claude\projects\`, in the folder named after this brain's path, then `memory`) and give me its full path.
 
-## Step 1: a save point (git, outside Dropbox)
+## Step 1: which computer is which
 
-**Main computer only.** If `role` is `second` (Step 0), skip this step and Step 3 completely: the git history and the Dropbox copy belong to the main computer, and no `.git` is made inside a Dropbox copy. If the mirror already copies a `.git` folder into Dropbox, leave that as it is; the kit neither adds nor removes it.
+Ask me once, in these words: "Which computer is your main one, and how do you use the other: do you open the Dropbox copy of the brain directly, or pull it back first?" Wait for my answer. This computer is `main` if it holds the master brain (the one the mirror copies FROM), otherwise `second`. Create or update `%USERPROFILE%\.claude\upn-kit\config.json` now (make the folder if needed) with `role` (`main` or `second`) and `second_use` (`open-dropbox-copy` or `pull-back` or `not used`), keeping any other keys. If this brain sits inside a Dropbox path, that is normal for a second computer that opens the Dropbox copy; do not move it. Show me the file.
+
+## Step 1b: a save point (git, outside Dropbox)
+
+**Main computer only.** If `role` is `second` (set in Step 1, just before this), skip this step and Step 3 completely: the git history and the Dropbox copy belong to the main computer, and no `.git` is made inside a Dropbox copy. If the mirror already copies a `.git` folder into Dropbox, leave that as it is; the kit neither adds nor removes it.
 
 Why: every later step can then be undone.
 
@@ -30,10 +35,6 @@ Why: every later step can then be undone.
 3. Make a `.gitignore` that leaves out: `20. RAW/`, `.raw/`, `.playwright-mcp/`, `node_modules/`, `.obsidian/workspace*.json`, any `claude-obsidian/` clone (it has its own git folder), temporary files, and any single file over 50 MB. Show me the list and wait for my yes before you write it.
 4. Make the first save point: `git add -A` then `git commit -m "Save point before the UPN kit, <today's date>"`. Never run `git push` and never add a remote.
 5. Test: show `git log --oneline -1`, `git status --short` (it should be empty) and the number of files committed. PASS only if the commit exists and the status is clean.
-
-## Step 1b: which computer is which
-
-Ask me once, in these words: "Which computer is your main one, and how do you use the other: do you open the Dropbox copy of the brain directly, or pull it back first?" Wait for my answer. This computer is `main` if it holds the master brain (the one the mirror copies FROM), otherwise `second`. Create or update `%USERPROFILE%\.claude\upn-kit\config.json` now (make the folder if needed) with `role` (`main` or `second`) and `second_use` (`open-dropbox-copy` or `pull-back` or `not used`), keeping any other keys. If this brain sits inside a Dropbox path, that is normal for a second computer that opens the Dropbox copy; do not move it. Show me the file.
 
 ## Step 2: reshape the memory
 
