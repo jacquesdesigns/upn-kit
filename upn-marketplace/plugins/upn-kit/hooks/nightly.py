@@ -27,7 +27,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import _lib  # noqa: E402
 
 BIG = 2_000_000                      # a new file over this size is never committed by the night save
-TEXT = {".md", ".txt", ".json", ".html", ".htm", ".csv", ".py", ".yml", ".yaml"}
+TEXT = {".md", ".txt", ".json", ".jsonl", ".html", ".htm", ".csv", ".py", ".yml", ".yaml",
+        ".ps1", ".bat", ".cmd", ".js", ".css", ".sh", ".svg"}   # scripts too: the Dropbox copy runs on .ps1 and .bat
 NEVER_COMMIT = ("20. RAW/", ".raw/", "dropbox", "node_modules/", ".playwright-mcp/")
 MAX_CONVERSATIONS = 40
 TEXT_CAP = 12000
