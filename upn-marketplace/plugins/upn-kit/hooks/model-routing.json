@@ -1,0 +1,30 @@
+{
+  "_": "Which helper agent runs on which model. Edit here, or put your own copy at ~/.claude/upn-kit/model-routing.json (it wins). A model asked for by name always wins. The main window's model is chosen in Claude Code with /model.",
+  "agents": {
+    "studio-designer": {
+      "model": "opus",
+      "effort": "low"
+    },
+    "studio-builder": {
+      "model": "opus",
+      "effort": "medium"
+    },
+    "studio-judge": {
+      "model": "opus",
+      "effort": "high"
+    },
+    "Explore": {
+      "model": "haiku"
+    },
+    "claude-code-guide": {
+      "model": "haiku"
+    },
+    "statusline-setup": {
+      "model": "haiku"
+    },
+    "general-purpose": {
+      "model": "sonnet",
+      "effort": "high"
+    }
+  }
+}

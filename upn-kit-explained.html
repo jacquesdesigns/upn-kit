@@ -1,0 +1,264 @@
+<title>Your Claude Kit</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Caveat:wght@600;700&display=swap">
+<style>
+/* layout: the lesson deck's look (paper, dot grid, dark app windows, blue + orange). One idea, then each person, then the kit as tiles, then install. */
+:root{
+  --paper:#ececed;--panel:#ffffff;--ink:#14151a;--muted:#5f636b;--line:#d6d7db;
+  --accent:#1d2bd4;--orange:#f26a1b;--good:#14804a;--dot:rgba(20,21,26,.13);
+  --win:#1e1f24;--wintext:#d9dbe1;--winmute:#8a8f99;
+  --display:"Archivo","Inter",system-ui,sans-serif;--font:"Inter",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,monospace;--hand:"Caveat","Comic Sans MS",cursive;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#111216;--panel:#1a1b20;--ink:#f1f2f4;--muted:#9097a3;--line:#2c2e35;--accent:#7d8bff;--orange:#ff8a45;--good:#5fd39a;--dot:rgba(255,255,255,.08);--win:#0b0c0f;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#111216;--panel:#1a1b20;--ink:#f1f2f4;--muted:#9097a3;--line:#2c2e35;--accent:#7d8bff;--orange:#ff8a45;--good:#5fd39a;--dot:rgba(255,255,255,.08);--win:#0b0c0f;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);background-image:radial-gradient(var(--dot) 1px,transparent 1px);background-size:22px 22px;color:var(--ink);font:16px/1.55 var(--font)}
+.w{max-width:1120px;margin:0 auto;padding-block:48px 96px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:72px}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;letter-spacing:-.02em}
+h1{font-size:clamp(36px,6vw,68px);line-height:1;font-weight:800;max-width:16ch}
+h2{font-size:clamp(26px,3.4vw,38px);line-height:1.08;font-weight:800;max-width:22ch}
+h3{font-size:19px;font-weight:700;letter-spacing:-.01em}
+p{margin:0;max-width:62ch}
+.label{font:500 12px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.lede{font-size:19px;color:var(--muted);max-width:56ch}
+.hand{font:700 24px/1.1 var(--hand);color:var(--accent)}
+.hand.o{color:var(--orange)}
+.stack{display:grid;gap:14px}
+.stack>*{min-width:0}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px}
+.win{background:var(--win);color:var(--wintext);border-radius:14px;overflow:hidden;font:13.5px/1.6 var(--mono);box-shadow:0 10px 30px rgba(0,0,0,.18)}
+.win .bar{display:flex;gap:6px;align-items:center;padding:10px 12px;background:rgba(255,255,255,.05)}
+.win .bar i{width:10px;height:10px;border-radius:50%;background:#3a3c44;display:block}
+.win .bar span{margin-left:8px;color:var(--winmute);font-size:12px}
+.win .body{padding:14px 16px;display:grid;gap:8px;overflow-x:auto}
+.you{color:#ffffff}.you::before{content:"you  ";color:var(--winmute)}
+.cl{color:var(--wintext)}.cl::before{content:"claude  ";color:var(--winmute)}
+.ok{color:#5fd39a}.no{color:#ff8a8a}.dim{color:var(--winmute)}
+.hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:40px;align-items:center}
+.hero>*{min-width:0}
+@media (max-width:860px){.hero{grid-template-columns:1fr}}
+.ba{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+@media (max-width:760px){.ba{grid-template-columns:1fr}}
+.tag{display:inline-block;font:600 12px var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;border-radius:999px;border:1.5px solid currentColor;width:max-content}
+.tag.now{color:var(--muted)}.tag.new{color:var(--accent)}
+.person{display:grid;gap:22px}
+.cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+@media (max-width:900px){.cols{grid-template-columns:1fr}}
+.col{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px;display:grid;gap:12px;align-content:start}
+.col h3{display:flex;gap:10px;align-items:center}
+.col h3 b{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font:700 14px var(--mono);color:#fff;flex:none}
+.col.a h3 b{background:var(--muted)}.col.b h3 b{background:var(--accent)}.col.c h3 b{background:var(--orange)}
+ul{margin:0;padding-left:18px;display:grid;gap:8px}
+li{max-width:60ch}
+.big{font:800 44px/1 var(--display);letter-spacing:-.03em;color:var(--accent);font-variant-numeric:tabular-nums}
+.stat{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:center}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+@media (max-width:760px){.stats{grid-template-columns:1fr}}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px;display:grid;gap:12px;align-content:start}
+.tile p{font-size:15px;color:var(--muted)}
+.tile .win{font-size:12.5px}
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+@media (max-width:860px){.steps{grid-template-columns:1fr}}
+.step{border-top:4px solid var(--accent);padding-top:14px;display:grid;gap:8px}
+.step:nth-child(2){border-color:var(--orange)}.step:nth-child(3){border-color:var(--good)}
+.keep{display:flex;flex-wrap:wrap;gap:10px}
+.keep span{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:14px}
+</style>
+
+<div class="w">
+
+<section class="hero">
+  <div class="stack">
+    <div class="label">For James and Jeremy · October 2026</div>
+    <h1>Your rules stop being reminders.</h1>
+    <p class="lede">Right now your Claude follows your rules when it remembers them. The kit turns the important ones into things that happen by themselves, so you type less and nothing slips.</p>
+  </div>
+  <div class="win" aria-label="Example: a rule that happens by itself">
+    <div class="bar"><i></i><i></i><i></i><span>VS Code · second brain</span></div>
+    <div class="body">
+      <div class="you">tidy up the bid folder in Dropbox</div>
+      <div class="cl">I can add new files there, but I can't move, rename or delete anything in Dropbox. Here's what I'd change instead.</div>
+      <div class="dim">· · ·</div>
+      <div class="cl">That job looks finished. Close it out? I'll write the wiki page and the job notes, and list every file I saved.</div>
+      <div class="you">yes</div>
+      <div class="ok">saved: wiki page, job notes, files in the job folder</div>
+    </div>
+  </div>
+</section>
+
+<section class="stack">
+  <div class="label">The one idea</div>
+  <h2>What you've been doing is what we taught. We've since moved on.</h2>
+  <p class="lede">We used to put every rule in a document and ask Claude to follow it. That works most of the time, and "most of the time" is the problem. Now the rules that matter are built in, and Claude can't skip them.</p>
+  <div class="ba">
+    <div class="panel stack">
+      <span class="tag now">How it works now</span>
+      <h3>Rules written down, Claude asked to follow them</h3>
+      <ul>
+        <li>"Don't touch Dropbox", "British spelling", "no long dashes" sit in a text file.</li>
+        <li>At the end of a job, you type "save this to the wiki".</li>
+        <li>Saving and backing up happen when someone remembers.</li>
+      </ul>
+    </div>
+    <div class="panel stack" style="border-color:var(--accent)">
+      <span class="tag new">With the kit</span>
+      <h3>Rules built in, checked every time</h3>
+      <ul>
+        <li>Dropbox is protected, and spelling is fixed the moment a file is written.</li>
+        <li>Claude offers to close out the job. You just say yes.</li>
+        <li>Your brain saves itself every night at 11pm.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="person">
+  <div class="stack">
+    <div class="label">Jeremy</div>
+    <h2>You use it every day. The kit takes away the repeating.</h2>
+  </div>
+  <div class="stats">
+    <div class="panel stat"><span class="big">79</span><p>conversations in the last month, every week</p></div>
+    <div class="panel stat"><span class="big">40×</span><p>you typed "save to the wiki and write a handover"</p></div>
+    <div class="panel stat"><span class="big">122</span><p>wiki pages, every one reachable from the index</p></div>
+  </div>
+  <div class="cols">
+    <div class="col a">
+      <h3><b>1</b>How you use it now</h3>
+      <ul>
+        <li>Most days, for bids, the website, Urban Hive and admin.</li>
+        <li>You share Dropbox links and Claude reads them.</li>
+        <li>Your memory notes and wiki are in good shape.</li>
+        <li>Your Urban Hive skills get real use. Keep them.</li>
+      </ul>
+    </div>
+    <div class="col b">
+      <h3><b>2</b>What the kit changes</h3>
+      <ul>
+        <li>No more typing the close-out. Claude offers it.</li>
+        <li>Long dashes and American spellings get fixed as Claude writes. Over a third of your wiki pages have them today.</li>
+        <li>Each conversation starts knowing which job you're on.</li>
+        <li>A search across your whole brain, answered in a moment.</li>
+      </ul>
+    </div>
+    <div class="col c">
+      <h3><b>3</b>Where it can improve</h3>
+      <ul>
+        <li>More than one file calls itself "the index". The first message merges them into one.</li>
+        <li>Your memory notes aren't in your Dropbox backup yet. The first message adds them.</li>
+        <li>Your daily Dropbox copy stays exactly as it is, so your other computer works as before. Optional: it also carries a copy of the server folder that's already in Dropbox, which you could leave out to make it lighter.</li>
+        <li>Some tools are installed twice or never used. They can be switched off, with nothing deleted.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="person">
+  <div class="stack">
+    <div class="label">James</div>
+    <h2>Your work is good. Most of it just never reaches the brain.</h2>
+  </div>
+  <div class="stats">
+    <div class="panel stat"><span class="big">15</span><p>long, heavy working sessions in the last month</p></div>
+    <div class="panel stat"><span class="big">221</span><p>files written to a temporary folder, against 15 in your project folders</p></div>
+    <div class="panel stat"><span class="big">91</span><p>wiki pages, with 24 updated this month. It's alive.</p></div>
+  </div>
+  <div class="cols">
+    <div class="col a">
+      <h3><b>1</b>How you use it now</h3>
+      <ul>
+        <li>You give Claude a big brief and your Dropbox job folders.</li>
+        <li>Drafts get built in a temporary folder that's cleared later.</li>
+        <li>Finished work goes straight into Dropbox. That's your real way of working, and it stays.</li>
+        <li>Every job ends with a how-to page in the wiki.</li>
+      </ul>
+    </div>
+    <div class="col b">
+      <h3><b>2</b>What the kit changes</h3>
+      <ul>
+        <li><b>Job start:</b> give Claude a job number and it makes the job's notes and remembers its Dropbox folders.</li>
+        <li>Claude can still save new files into Dropbox. It can't overwrite, move or delete anything there.</li>
+        <li>Your memory index gets read at the start of every conversation. Today it isn't.</li>
+        <li>Close-out is offered at the end, so the brain hears about every job.</li>
+      </ul>
+    </div>
+    <div class="col c">
+      <h3><b>3</b>Where it can improve</h3>
+      <ul>
+        <li>The website exists in copies that have drifted apart. Pick one master, ideally before the domain renews.</li>
+        <li>The monthly project-list job has never finished a run. Worth fixing or switching off.</li>
+        <li>Most of the tools Claude can see have never been used. Switching them off makes it quicker and sharper.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="stack">
+  <div class="label">What's in the kit</div>
+  <h2>What now happens by itself</h2>
+  <div class="tiles">
+    <div class="tile">
+      <h3>Dropbox stays safe</h3>
+      <div class="win"><div class="body"><div class="ok">✓ new file saved to the job folder</div><div class="no">✗ overwrite, move or delete: blocked</div></div></div>
+      <p>Claude reads everything and can add new files. Nothing on the server gets replaced or lost. 20. RAW is read-only.</p>
+    </div>
+    <div class="tile">
+      <h3>Your writing style, every time</h3>
+      <div class="win"><div class="body"><div class="dim">color → colour</div><div class="dim">long dash → comma</div></div></div>
+      <p>Spelling and dashes are fixed the moment a file is written. Nobody has to check.</p>
+    </div>
+    <div class="tile">
+      <h3>Picks up where you left off</h3>
+      <div class="win"><div class="body"><div class="cl">Back on this job. Last time: draft sent for comments.</div></div></div>
+      <p>Each conversation opens with your notes and the job you're on.</p>
+    </div>
+    <div class="tile">
+      <h3>Close-out in one word</h3>
+      <div class="win"><div class="body"><div class="cl">Close it out?</div><div class="you">yes</div></div></div>
+      <p>Wiki page, job notes and a list of every saved file, with where it is.</p>
+    </div>
+    <div class="tile">
+      <h3>Knows when a chat is full</h3>
+      <div class="win"><div class="body"><div class="dim">conversation 25% full · handover written</div></div></div>
+      <p>Long conversations get slow and forgetful. Claude writes the handover and tells you when to start fresh.</p>
+    </div>
+    <div class="tile">
+      <h3>Saves itself every night</h3>
+      <div class="win"><div class="body"><div class="dim">23:00 save point made</div><div class="dim">23:20 notes on today's work</div></div></div>
+      <p>A save point of the whole brain, plus short notes on what worked, what broke and what was decided.</p>
+    </div>
+    <div class="tile">
+      <h3>Find anything fast</h3>
+      <div class="win"><div class="body"><div class="you">where's that job's folder?</div><div class="cl">Dropbox › 0. Projects › (job number)</div></div></div>
+      <p>One search over your notes, wiki and Dropbox folder names. It never opens the files.</p>
+    </div>
+    <div class="tile">
+      <h3>A quick health check</h3>
+      <div class="win"><div class="body"><div class="ok">✓ backup ran this week</div><div class="no">✗ a note points at a missing file</div></div></div>
+      <p>Each day's first conversation flags anything that's drifted, one line per problem.</p>
+    </div>
+  </div>
+  <p class="hand">your studio skills come too, as this month's versions, replacing the ones from 2 October.</p>
+</section>
+
+<section class="stack">
+  <div class="label">How it goes in</div>
+  <h2>Two messages to your own Claude, then we sit down together</h2>
+  <div class="steps">
+    <div class="step"><h3>1 · Make it safe</h3><p>Claude makes a save point so everything can be undone, tidies your memory into one index and adds it to the backup. It asks yes or no before it changes anything.</p></div>
+    <div class="step"><h3>2 · Install the kit</h3><p>Claude installs everything, tests each piece and sets up the nightly save. At the end it makes a small report. Send that to us. Then run both messages on your other computer; Claude knows it's the second one and keeps your Dropbox copy as it is.</p></div>
+    <div class="step"><h3>3 · Together</h3><p>We go through it with you, set up James's job start and Jeremy's drafts, and answer anything. A month later, the same report shows what moved.</p></div>
+  </div>
+</section>
+
+<section class="stack">
+  <div class="label">What stays exactly as it is</div>
+  <div class="keep">
+    <span>Dropbox and how you save to it</span><span>your Dropbox copy of the brain, on both computers</span><span>your wiki</span><span>your memory notes (tidied, not lost)</span><span>Urban Hive skills</span><span>image generation</span><span>project sheets</span><span>VS Code</span><span>your connected apps</span>
+  </div>
+  <p class="hand o">nothing is deleted. anything switched off can be switched back on.</p>
+</section>
+
+</div>

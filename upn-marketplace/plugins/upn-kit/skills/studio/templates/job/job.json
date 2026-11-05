@@ -1,0 +1,17 @@
+{
+  "name": "",
+  "stage": "intake",
+  "gates": { "intake": false, "brief": false, "direction": false, "system": false,
+             "build": false, "critique": false, "handback": false },
+  "serve": { "root": null, "entry": "/" },
+  "live_url": null,
+  "pages": [],
+  "flows": [],
+  "tokens": null,
+  "space_scale": [],
+  "grid": { "columns": null, "gutter_var": null, "max_width_var": null },
+  "type": { "families": [], "max_sizes_per_fold": null, "min_display_to_body": null },
+  "components": { "source_dir": null, "manifest": null },
+  "copy": { "banned": [], "unknown_marker": "to confirm" },
+  "limits": {}
+}

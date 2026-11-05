@@ -1,0 +1,116 @@
+{
+  "_about": "Studio check kit defaults. A job's job.json wins over everything here: its keys replace the matching keys under 'defaults', and its 'limits' object replaces the matching keys under 'limits' and 'lists'. Numbers are proposals from the studio build notes until the owner confirms them.",
+
+  "limits": {
+    "pan": 0,
+    "painted_past": 0,
+    "overlap": 0,
+    "overlap_min_area_px2": 12,
+    "clipped": 0,
+    "grid_misses": 0,
+    "grid_tolerance_px": 2,
+    "spacing_off_scale": 0,
+    "spacing_tolerance_px": 1,
+    "align_tolerance_px": 2,
+    "sizes_per_fold": 4,
+    "display_to_body": 3,
+    "size_cluster_pct": 4,
+    "contrast": "AA",
+    "contrast_normal": 4.5,
+    "contrast_large": 3.0,
+    "large_text_px": 24,
+    "large_bold_px": 18.66,
+    "target_px": 44,
+    "slow_frame_ms": 20,
+    "frames_over_slow_pct": 1.0,
+    "max_frame_ms": 50,
+    "cpu_throttle": 4,
+    "pin_drift_px": 2,
+    "backward_runs": 2,
+    "wheel_step_px": 24,
+    "wheel_interval_ms": 16,
+    "touch_drag_px": 420,
+    "address_bar_height": 780,
+    "motion_missing_words": 0,
+    "copy_hits": 0,
+    "mockup_images": 0,
+    "component_drift": 0,
+    "token_leaks": 0,
+    "load_settle_ms": 1500,
+    "settle_ms": 900,
+    "quick_settle_ms": 450,
+    "max_folds": 30,
+    "film_fps": 30,
+    "film_pace_px_s": 300,
+    "film_max_seconds": 60,
+    "load_max_per_cpu": 2.0,
+    "load_wait_s": 60,
+    "section_selector": null,
+    "max_controls_per_page": 400,
+    "max_disclosures_per_page": 8
+  },
+
+  "sizes": {
+    "widths": [320, 360, 390, 430, 768, 960, 1024, 1100, 1180, 1280, 1366, 1440, 1536, 1680, 1920, 2560, 3440],
+    "height": 900,
+    "extra": [[1280, 720], [1366, 768], [844, 390]],
+    "quick_widths": [390, 1280, 1440],
+    "phone_max_width": 480,
+    "controls": [[390, 844], [1440, 900]],
+    "motion": [[1440, 900], [390, 844]],
+    "type_colour_fonts": [390, 1440]
+  },
+
+  "defaults": {
+    "name": "unnamed job",
+    "serve": { "root": ".", "entry": "/" },
+    "live_url": null,
+    "pages": [ { "name": "home", "path": "/" } ],
+    "flows": [],
+    "tokens": null,
+    "space_scale": [],
+    "grid": null,
+    "type": { "families": [], "max_sizes_per_fold": null, "min_display_to_body": null },
+    "components": { "source_dir": null, "manifest": null },
+    "copy": {
+      "banned": [],
+      "unknown_marker": "to confirm",
+      "allow_prices": false,
+      "allow_dates": false,
+      "mockup_dirs": ["mockups"],
+      "banned_images": []
+    },
+    "limits": {}
+  },
+
+  "lists": {
+    "ai_mentions": [],
+    "us_spellings": [
+      "color", "colors", "colored", "colorful", "center", "centers", "centered", "organize", "organized",
+      "organization", "organizations", "realize", "realized", "favorite", "favorites", "behavior",
+      "behaviors", "analyze", "analyzed", "customize", "customized", "optimize", "optimized", "catalog",
+      "catalogs", "gray", "grays", "traveling", "traveled", "traveler", "modeling", "labeled", "labeling",
+      "theater", "defense", "jewelry", "aluminum", "apologize", "recognize", "recognized", "personalize",
+      "personalized", "specialize", "specialized", "prioritize", "minimize", "maximize", "fulfill",
+      "enrollment", "neighbor", "neighborhood", "honor", "honored", "flavor", "humor", "rumor", "savor",
+      "vapor", "harbor", "endeavor", "canceled", "canceling", "program", "programs"
+    ],
+    "hype": [
+      "world-class", "world class", "cutting-edge", "cutting edge", "game-changing", "game changer",
+      "revolutionary", "revolutionise", "unparalleled", "unrivalled", "best-in-class", "next-level",
+      "next level", "seamless", "seamlessly", "unleash", "supercharge", "synergy", "groundbreaking",
+      "state-of-the-art", "must-see", "breathtaking", "jaw-dropping", "mind-blowing", "elevate your",
+      "take it to the next", "like never before", "second to none", "unmissable", "epic", "iconic"
+    ],
+    "placeholders": [
+      "lorem", "ipsum", "\\bTODO\\b", "\\bTBC\\b", "\\bTBA\\b", "\\bTBD\\b", "\\bFIXME\\b", "\\bXXX+\\b",
+      "placeholder", "artist name", "your name here", "\\?\\?\\?"
+    ],
+    "gsap_scripts": [
+      "gsap", "ScrollTrigger", "ScrollSmoother", "SplitText", "DrawSVG", "MorphSVG", "CustomEase",
+      "MotionPath", "Observer", "Flip\\.", "Draggable", "InertiaPlugin", "ScrollToPlugin", "TextPlugin"
+    ],
+    "vendor_paths": ["vendor/", "node_modules/", ".min.js", ".min.css", "/lib/", "third-party/"],
+    "clip_ok": ["[data-clip-ok]", "[data-overlap-ok]", "[class*=\"marquee\"]", "[class*=\"ticker\"]"]
+  }
+}

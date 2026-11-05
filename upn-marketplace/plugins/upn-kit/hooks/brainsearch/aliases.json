@@ -1,0 +1,3 @@
+{
+  "_about": "Nicknames with NO page of their own. If a person, client or job has a wiki page, put the nickname in that page's frontmatter aliases instead. Key = phrase typed in a search (lower case); value = phrases to search for as well."
+}

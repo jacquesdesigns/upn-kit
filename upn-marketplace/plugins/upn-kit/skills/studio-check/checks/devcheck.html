@@ -1,0 +1,27 @@
+<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>device check</title>
+<style>
+:root{color-scheme:dark}body{margin:0;font:15px/1.4 -apple-system,system-ui,sans-serif;background:#10131a;color:#e8ecf4;padding:max(14px,env(safe-area-inset-top)) 14px 40px}
+h1{font-size:18px;margin:0 0 6px}p{margin:6px 0;color:#aab3c5}#box{height:210px;overflow:auto;border:2px solid #6c8cff;border-radius:10px;margin:10px 0;background:#161b26}
+#box div{padding:14px;border-bottom:1px solid #263047}#plain{height:120px;border:2px dashed #6c8cff;border-radius:10px;display:grid;place-items:center;text-align:center;margin:10px 0}
+button{font:inherit;padding:12px 18px;border-radius:10px;border:0;background:#6c8cff;color:#fff;margin:6px 6px 0 0}#log{font:12px/1.5 ui-monospace,monospace;white-space:pre-wrap;color:#9fe3b0}
+</style></head><body>
+<h1>Device check</h1>
+<p>1. Swipe up and down inside the blue list, slowly, then flick it hard so it carries on after you let go (do it 3 times).</p>
+<div id="box"></div>
+<p>2. Swipe in the dashed area (nothing scrolls there), 3 times, slow and fast.</p>
+<div id="plain">swipe here</div>
+<button id="send">Send to the computer</button><button id="clear">Clear</button>
+<p id="log">waiting</p>
+<script>
+var rec={ua:navigator.userAgent,dpr:devicePixelRatio,w:innerWidth,h:innerHeight,vv:visualViewport?[visualViewport.width,visualViewport.height]:null,standalone:!!navigator.standalone,start:Date.now(),events:[]};
+var box=document.getElementById('box');for(var i=1;i<=40;i++){var d=document.createElement('div');d.textContent='row '+i;box.appendChild(d)}
+function where(t){return t.closest&&t.closest('#box')?'list':t.closest&&t.closest('#plain')?'plain':'other'}
+['touchstart','touchmove','touchend','touchcancel'].forEach(function(n){addEventListener(n,function(e){var t=(e.changedTouches||[{}])[0];rec.events.push({k:n,t:Math.round(performance.now()),x:Math.round(t.clientX||0),y:Math.round(t.clientY||0),in:where(e.target)})},{passive:true,capture:true})});
+addEventListener('wheel',function(e){rec.events.push({k:'wheel',t:Math.round(performance.now()),dy:Math.round(e.deltaY*10)/10,dm:e.deltaMode,in:where(e.target)})},{passive:true,capture:true});
+box.addEventListener('scroll',function(){rec.events.push({k:'scroll',t:Math.round(performance.now()),top:Math.round(box.scrollTop)})},{passive:true});
+function show(){var n={};rec.events.forEach(function(e){n[e.k]=(n[e.k]||0)+1});document.getElementById('log').textContent=JSON.stringify(n)}
+setInterval(show,500);
+document.getElementById('clear').onclick=function(){rec.events=[];show()};
+document.getElementById('send').onclick=function(){var x=new XMLHttpRequest();x.open('POST','/_devcheck/save');x.onload=function(){document.getElementById('log').textContent=x.responseText};x.onerror=function(){document.getElementById('log').textContent='send failed'};x.send(JSON.stringify(rec))};
+</script></body></html>
