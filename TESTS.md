@@ -1,6 +1,17 @@
-# TESTS: UPN kit, 25 Oct 2026 (v1.0.0), retested 5 Nov 2026 (v1.1.0, then v1.1.1)
+# TESTS: UPN kit, 25 Oct 2026 (v1.0.0), retested 5 Nov 2026 (v1.1.0, then v1.1.1, then v1.2.0)
 
 Where each test ran is stated on its line. Mac is the build machine. PC is the studio Windows PC (Windows, PowerShell over ssh, user claude-remote, non-admin, Python 3.13.15, Node 24, Git 2.55). A failure stays a failure.
+
+## 5 Nov 2026: v1.2.0, parts A and B merged
+
+What changed: part A (gaps 1, 2, 3, 6, 9, 10) and part B (gaps 4, 5, 7, 8) of the 5 Nov audit, merged on branch v12-b. Version 1.1.1 to 1.2.0 in both manifests. The self-test has 172 cases (133 from v1.1.1, 18 from part A, 21 from part B). The merge clashed only in this file; selftest.py merged by itself.
+
+| Piece | Where | Command | Result |
+|---|---|---|---|
+| Full self-test after the merge | Mac (Python 3.15) | python3 selftest.py | PASS, 172 of 172 |
+| Same self-test | PC, kit copied to C:\Users\claude-remote\upn-kit-test\upn-kit-120 (no .git, no __pycache__) | python selftest.py (output in selftest-pc-120.txt beside it) | PASS, 172 of 172 |
+| Marketplace manifest and plugin manifest valid, version 1.2.0 | Mac (claude 2.1.318), PC (claude 2.1.310) | claude plugin validate upn-marketplace ; claude plugin validate upn-marketplace/plugins/upn-kit | PASS on both (the PC notes a missing plugin icon, a directory listing note only) |
+| The new hooks in a live Claude session (latest.py writing a real NOW file, the re-read refusal shown in a session) | not run | open the brain after install, write the notes file, read a long file twice | NOT VERIFIED: tested through the self-test's sample hook input only |
 
 ## 5 Nov 2026: v1.2.0 (part A: six small hook gaps)
 
@@ -15,7 +26,7 @@ What changed: gaps 1, 2, 3, 6, 9 and 10 from the 5 Nov audit of our own system a
 | 9. Each LOOK FIRST block adds one line to `lookfirst-hits.log` in the kit folder (`~/.claude/upn-kit/`); Prompt 2 Step 7 puts its count in the report ("look-first blocks: n") | Mac | selftest.py: "v12 hits: a LOOK FIRST block adds one line to the hits log", "v12 hits: a silent prompt adds nothing", "v12 hits: Prompt 2 report zip carries the look-first count" | PASS |
 | 10. Night save: a job word after "not", "isn't", "apart from", "nothing to do with" (also "except", "other than", "aside from", "without") does not tie a day to that job | Mac | selftest.py: "v12 night save: \"not the Oman job\" is not logged under Oman" | PASS (v1.1.1 logged all three titles under Oman) |
 | Full self-test | Mac (Python 3.15) | python3 selftest.py | PASS, 151 of 151 |
-| Same self-test | PC | python selftest.py | NOT RUN: part B runs the PC pass after the merge |
+| Same self-test | PC | python selftest.py | run after the merge: see "v1.2.0, parts A and B merged" above |
 
 ## 5 Nov 2026: v1.2.0, part B (gaps 4, 5, 7, 8 of the 5 Nov system audit)
 
