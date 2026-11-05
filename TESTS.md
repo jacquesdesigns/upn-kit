@@ -2,6 +2,21 @@
 
 Where each test ran is stated on its line. Mac is the build machine. PC is the studio Windows PC (Windows, PowerShell over ssh, user claude-remote, non-admin, Python 3.13.15, Node 24, Git 2.55). A failure stays a failure.
 
+## 5 Nov 2026: v1.2.0 (part A: six small hook gaps)
+
+What changed: gaps 1, 2, 3, 6, 9 and 10 from the 5 Nov audit of our own system against the kit (`kit/system-vs-kit-2026-11-05.html`, "Portable and missing"). The version is not bumped here; part B bumps it. The self-test has 151 cases (133 before, plus 18 new "v12" cases; one existing case changed, see gap 3). Every new case except one was run against the v1.1.1 hooks first and failed there: 15 FAIL. The exception, "catch silent on a subagent report", already passed in v1.1.1 and stays as a guard.
+
+| Gap | Where | Command | Result |
+|---|---|---|---|
+| 1. Night save takes new .ps1 .bat .cmd .js .css .sh .svg .jsonl files (`nightly.py` TEXT) | Mac | selftest.py: "v12 night save: new .ps1 .bat .cmd .js .css .sh .svg .jsonl committed" | PASS (v1.1.1: all eight missing) |
+| 2. One machine-message pattern, `_lib.MACHINE` / `_lib.is_machine`, used by `lookfirst.py` and `catch.py`: subagent reports, task notifications, hook output, compaction summaries | Mac | selftest.py: "v12 machine: ..." (shared pattern; look-first and catch each silent on a task notification, a compaction summary, hook output and a subagent report, edits free; the person's own correction still caught) | PASS, 10 cases |
+| 3. `session_start.py`: a job is in hand only from the folder the conversation was opened in; at the root it loads none and lists the recent jobs ("NO JOB LOADED ... RECENT JOBS") | Mac | selftest.py: "v12 session-start: at the root, no job in hand, recent jobs listed", "v12 session-start: opened inside a job folder, that job is in hand". The existing case "second machine: session start works in the Dropbox brain" opens at the root, so it now checks for RECENT JOBS instead of JOB IN HAND | PASS |
+| 6. `CLAUDE-SNIPPET.md`: one helper agent gets about five changes; a new ask during its run goes to a fresh agent | Mac | selftest.py: "v12 snippet: about five changes per helper agent, new ask to a fresh one" | PASS |
+| 9. Each LOOK FIRST block adds one line to `lookfirst-hits.log` in the kit folder (`~/.claude/upn-kit/`); Prompt 2 Step 7 puts its count in the report ("look-first blocks: n") | Mac | selftest.py: "v12 hits: a LOOK FIRST block adds one line to the hits log", "v12 hits: a silent prompt adds nothing", "v12 hits: Prompt 2 report zip carries the look-first count" | PASS |
+| 10. Night save: a job word after "not", "isn't", "apart from", "nothing to do with" (also "except", "other than", "aside from", "without") does not tie a day to that job | Mac | selftest.py: "v12 night save: \"not the Oman job\" is not logged under Oman" | PASS (v1.1.1 logged all three titles under Oman) |
+| Full self-test | Mac (Python 3.15) | python3 selftest.py | PASS, 151 of 151 |
+| Same self-test | PC | python selftest.py | NOT RUN: part B runs the PC pass after the merge |
+
 ## 5 Nov 2026: v1.1.1
 
 What changed: seven things found when Prompts 1 and 2 were run end to end in VS Code on the PC. Version 1.1.0 to 1.1.1. The self-test has 133 cases (126 before, plus 7 new ones below).
