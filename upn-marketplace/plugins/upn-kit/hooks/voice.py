@@ -46,7 +46,9 @@ def check(text, html=False):
         out.append("em dash (use commas, semicolons, full stops or brackets)")
     if re.search(r"\s\u2013\s", prose):
         out.append("spaced en dash used as a dash (use a comma or full stop)")
-    if re.search(r"(?<![\w-])--(?![\w-])|\w--\w|\s--\s", prose):
+    # client--project folder names are paths, not prose: drop any token with a / or \ in it (this also catches the
+    # tail of a Windows path cut at a space, "Brain\upn\projects\upn--kit-install\NOW.md") before looking for --
+    if re.search(r"(?<![\w-])--(?![\w-])|\w--\w|\s--\s", re.sub(r"\S*[\\/]\S*", " ", prose)):
         out.append("double dash")
     for pat, uk in US_WORDS:
         if not uk:
