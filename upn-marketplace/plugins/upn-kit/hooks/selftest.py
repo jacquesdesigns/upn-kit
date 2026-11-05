@@ -390,8 +390,9 @@ def main():
     r = subprocess.run([PY, str(HERE / "brainsearch" / "index.py"), "--full"], capture_output=True, text=True, encoding="utf-8", env=env)
     case("second machine: search index lives in the kit folder, not Dropbox", "index.py", (home / "brain.db").exists() and not list(dbrain.glob("**/brain.db")), r.stdout.strip()[:100])
     _, out, _ = run_hook("session_start.py", dict(base_db, hook_event_name="SessionStart", source="startup"), env)
-    case("second machine: session start works in the Dropbox brain", "session_start.py", "JOB IN HAND" in out and not list(dbrain.glob("**/_state")), out[:100])
+    case("second machine: session start works in the Dropbox brain", "session_start.py", "RECENT JOBS" in out and "x--y" in out and not list(dbrain.glob("**/_state")), out[:100])  # v1.2.0: opened at the root, no job is loaded (gap 3)
     (home / "config.json").write_text(json.dumps(cfg_main), encoding="utf-8")
+    v12a_cases(tmp, brain, home, env, base, job)
 
     # ======== v1.2.0 part B: LATEST in the job's NOW file, the re-read check, two doctor checks ========
     (home / "config.json").write_text(json.dumps(cfg_main), encoding="utf-8")
@@ -494,6 +495,80 @@ def main():
     else:
         shutil.rmtree(tmp, ignore_errors=True)
     return 1 if fails else 0
+
+
+# ---------------------------------------------------------------- v1.2.0 part A: gaps 1, 2, 3, 6, 9, 10 of the 5 Nov audit
+def v12a_cases(tmp, brain, home, env, base, job):
+    kit = HERE.parent.parent.parent.parent
+    hits = home / "lookfirst-hits.log"
+
+    def count():
+        return len(hits.read_text("utf-8").splitlines()) if hits.exists() else 0
+
+    # gap 2: one machine-message pattern, used by look-first and catch
+    src = (HERE / "brainsearch" / "lookfirst.py").read_text("utf-8") + (HERE / "catch.py").read_text("utf-8")
+    case("v12 machine: look-first and catch share _lib.MACHINE", "lookfirst.py, catch.py", src.count("_lib.is_machine(") >= 2 and "MACHINE = re.compile" in (HERE / "_lib.py").read_text("utf-8"), "both call _lib.is_machine")
+    machine = {
+        "task notification": "<task-notification><summary>Agent done</summary> what did we decide about the Oman tender? you forgot the fee table</task-notification>",
+        "compaction summary": "This session is being continued from a previous conversation that ran out of context. What did we decide about the Oman tender? You forgot the fee table.",
+        "hook output": "Stop hook feedback: you forgot to check the Oman tender we decided on yesterday",
+        "subagent report": "[Subagent hand-back] what did we decide about the Oman tender? you forgot the fee table",
+    }
+    for label, prompt in machine.items():
+        before = count()
+        _, out, _ = run_hook("brainsearch/lookfirst.py", dict(base, hook_event_name="UserPromptSubmit", prompt=prompt), env)
+        case("v12 machine: look-first silent on a " + label, "lookfirst.py", out == "" and count() == before, out[:90] or "(silent)")
+        sid = "selftest-v12-" + label.replace(" ", "-")
+        _, out, _ = run_hook("catch.py", dict(base, session_id=sid, hook_event_name="UserPromptSubmit", prompt=prompt), env)
+        _, out2, _ = run_hook("catch.py", dict(base, session_id=sid, hook_event_name="PreToolUse", tool_name="Edit",
+                                                tool_input={"file_path": str(brain / "wiki" / "oman.md"), "old_string": "a", "new_string": "b"}), env)
+        case("v12 machine: catch silent on a " + label + ", edits free", "catch.py", out == "" and out2 == "", (out or out2)[:90] or "(silent)")
+    _, out, _ = run_hook("catch.py", dict(base, session_id="selftest-v12-person", hook_event_name="UserPromptSubmit", prompt="you forgot the fee table again"), env)
+    case("v12 machine: the person's own correction still caught", "catch.py", "CATCH" in out, out[:90])
+
+    # gap 9: each LOOK FIRST block adds one line to the hits log; an ordinary prompt adds none
+    before = count()
+    _, out, _ = run_hook("brainsearch/lookfirst.py", dict(base, hook_event_name="UserPromptSubmit", prompt="what did we decide about the Oman tender?"), env)
+    case("v12 hits: a LOOK FIRST block adds one line to the hits log", "lookfirst.py", "LOOK FIRST" in out and count() == before + 1, ((hits.read_text("utf-8").splitlines() if hits.exists() else []) or ["(no log)"])[-1][:110])
+    before = count()
+    run_hook("brainsearch/lookfirst.py", dict(base, hook_event_name="UserPromptSubmit", prompt="write me a new paragraph"), env)
+    case("v12 hits: a silent prompt adds nothing", "lookfirst.py", count() == before, "%d lines" % count())
+    p2 = (kit / "PROMPT-2.md").read_text("utf-8")
+    case("v12 hits: Prompt 2 report zip carries the look-first count", "PROMPT-2.md", "lookfirst-hits.log" in p2 and "look-first blocks" in p2, "named in Step 7")
+
+    # gap 3: at the brain's root no job is in hand; the recent jobs are listed and none is loaded
+    _, out, _ = run_hook("session_start.py", dict(base, hook_event_name="SessionStart", source="clear", cwd=str(brain)), env)
+    ctx = json.loads(out)["hookSpecificOutput"]["additionalContext"] if out else ""
+    case("v12 session-start: at the root, no job in hand, recent jobs listed", "session_start.py",
+         "JOB IN HAND" not in ctx and "check the fee table" not in ctx and "NO JOB LOADED" in ctx and "mohup--oman-aig" in ctx, ctx[ctx.find("NO JOB"):][:110] or ctx[:110])
+    _, out, _ = run_hook("session_start.py", dict(base, hook_event_name="SessionStart", source="clear", cwd=str(job / "01 engine-room")), env)
+    case("v12 session-start: opened inside a job folder, that job is in hand", "session_start.py", "JOB IN HAND" in out and "mohup--oman-aig" in out and "check the fee table" in out, out[:110])
+
+    # gap 6: the snippet carries one agent, one short list
+    snip = (kit / "CLAUDE-SNIPPET.md").read_text("utf-8")
+    case("v12 snippet: about five changes per helper agent, new ask to a fresh one", "CLAUDE-SNIPPET.md", "about five changes" in snip and "fresh agent" in snip, "line present")
+
+    # gaps 1 and 10: one night save with a new .ps1 and .bat, and a title that says "not the Oman job"
+    if not shutil.which("git") or not (brain / ".git").exists():
+        case("v12 night save", "git", False, "git is not installed or the brain has no save point")
+        return
+    day = "2026-12-01"
+    (brain / "tools").mkdir(exist_ok=True)
+    news = {"mirror.ps1": "robocopy a b /MIR\n", "run.bat": "@echo off\n", "go.cmd": "@echo off\n", "app.js": "x\n", "site.css": "a{}\n",
+            "sync.sh": "echo\n", "mark.svg": "<svg/>\n", "log.jsonl": "{}\n"}
+    for n, t in news.items():
+        (brain / "tools" / n).write_text(t, encoding="utf-8")
+    (brain / "_state" / ("%s-v12neg01.md" % day)).write_text("# Albania fee table, not the Oman job\n", encoding="utf-8")
+    (brain / "_state" / ("%s-v12neg02.md" % day)).write_text("# Oman AIG fee check\n", encoding="utf-8")
+    (brain / "_state" / ("%s-v12neg03.md" % day)).write_text("# Pitch notes, nothing to do with Oman\n", encoding="utf-8")
+    r = subprocess.run([PY, str(HERE / "nightly.py"), "save", day], capture_output=True, text=True, encoding="utf-8", env=env)
+    tracked = subprocess.run(["git", "-C", str(brain), "ls-files", "tools"], capture_output=True, text=True).stdout.split()
+    missing = [n for n in news if "tools/" + n not in tracked]
+    case("v12 night save: new .ps1 .bat .cmd .js .css .sh .svg .jsonl committed", "nightly.py save", not missing, ("missing: " + ", ".join(missing)) if missing else r.stdout.strip()[:100])
+    oman = (job / "NOW.md").read_text("utf-8")
+    alb = (brain / "upn" / "projects" / "wb--albania-tourism" / "NOW.md").read_text("utf-8")
+    ok = ("- %s: Oman AIG fee check\n" % day) in oman and "not the Oman job" not in oman and "nothing to do with Oman" not in oman and "not the Oman job" in alb
+    case("v12 night save: \"not the Oman job\" is not logged under Oman", "nightly.py save", ok, [l for l in oman.splitlines() if l.startswith("- %s" % day)][:1].__str__()[:110])
 
 
 if __name__ == "__main__":

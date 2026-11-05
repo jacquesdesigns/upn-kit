@@ -27,7 +27,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import _lib  # noqa: E402
 
 BIG = 2_000_000                      # a new file over this size is never committed by the night save
-TEXT = {".md", ".txt", ".json", ".html", ".htm", ".csv", ".py", ".yml", ".yaml"}
+TEXT = {".md", ".txt", ".json", ".jsonl", ".html", ".htm", ".csv", ".py", ".yml", ".yaml",
+        ".ps1", ".bat", ".cmd", ".js", ".css", ".sh", ".svg"}   # scripts too: the Dropbox copy runs on .ps1 and .bat
 NEVER_COMMIT = ("20. RAW/", ".raw/", "dropbox", "node_modules/", ".playwright-mcp/")
 MAX_CONVERSATIONS = 40
 TEXT_CAP = 12000
@@ -159,6 +160,21 @@ def titles_for(day):
     return out
 
 
+# "not the Oman job" must not tie a day to Oman: a job word right after a negation does not count (ours since 28 Oct).
+NEGATED = re.compile(r"(?:\bnot|n[\u2019']t|\bnothing to do with|\bapart from|\bexcept(?: for)?|\bother than|\baside from|\bwithout)"
+                     r"\s+(?:(?:the|a|an|any|my|our|this|that|his|its)\s+)?$")
+
+
+def names_job(title, needles):
+    """True when a notes title names the job: one of its folder words appears, not straight after "not", "isn't" and the like."""
+    low = title.lower()
+    for w in needles:
+        for m in re.finditer(re.escape(w), low):
+            if not NEGATED.search(low[max(0, m.start() - 40):m.start()]):
+                return True
+    return False
+
+
 def night_save(day):
     if second_machine("night save"):
         return 0
@@ -167,7 +183,7 @@ def night_save(day):
     for p in find_now_files(root):
         job = p.parent.name.lower()
         words = [w for w in re.split(r"[\s_\-]+", job) if len(w) >= 3]
-        mine = [t for t in titles if job in t.lower() or any(w in t.lower() for w in words[:3])]
+        mine = [t for t in titles if names_job(t, [job] + words[:3])]
         if not mine:
             continue
         txt = p.read_text("utf-8", "replace")

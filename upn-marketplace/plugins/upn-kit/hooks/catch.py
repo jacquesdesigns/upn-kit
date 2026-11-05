@@ -3,7 +3,7 @@
 UserPromptSubmit: spots a correction ("I told you", "you always", "stop doing", "from now on", "not what I asked"...)
 and tells Claude to save it first: as a rule in ~/.claude/upn-kit/rules.json when a pattern can check it (a word, a
 spelling, a phrase), or as ONE dated line in the memory index otherwise. Until that is done, PreToolUse blocks other edits.
-Only the person's own typed words count; subagent reports do not.
+Only the person's own typed words count; machine messages (_lib.MACHINE) do not.
 """
 import re
 import sys
@@ -34,7 +34,8 @@ def is_correction(text):
 
 
 def is_agent_handback(text):
-    return bool(re.match(r"\s*(Another Claude session sent a message:\s*)?<agent-message\b|\[Subagent hand-back\]", text[:400]))
+    """Any machine message (agent reports, task notifications, hook output, compaction summaries): _lib.MACHINE."""
+    return _lib.is_machine(text[:400])
 
 
 def is_lesson_write(path):

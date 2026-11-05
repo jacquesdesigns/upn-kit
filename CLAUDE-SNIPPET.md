@@ -14,4 +14,6 @@ Closing a session: the `close-out` skill writes the wiki page, updates the job's
 
 Voice: British English; no em dashes and no double dashes; plain words, no hype. The kit checks this after every write.
 
+Helper agents: one agent gets a short list, about five changes; more work goes to more agents in parallel. A new ask during an agent's run goes to a fresh agent, never onto the running one.
+
 Memory: one index only, the auto-memory `MEMORY.md`, kept small, with one hub file per area and one fact per file. A correction from the person becomes a saved rule before work carries on.

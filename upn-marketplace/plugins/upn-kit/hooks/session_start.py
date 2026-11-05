@@ -2,7 +2,9 @@
 
 On startup, resume, clear and compact it:
  - records where the kit is (config.json kit_root, python_exe) and writes the nightly shim ~/.claude/upn-kit/run-nightly.py and run-nightly.cmd;
- - finds the job in hand (the folder you opened inside, else the newest NOW.md) and hands over its NOW file;
+ - finds the job in hand only from the folder the conversation was opened in, and hands over its NOW file; opened anywhere
+   else (the brain's root), it loads no job and lists the recent ones, because the night save touches NOW files every night
+   and the newest one is not the job the person means;
  - lists the other recently changed NOW files, the saved rules and the memory folder;
  - offers a waiting handover note (an "OPEN: next = ..." line in _state/) once, then marks it TAKEN;
  - on compact and resume, hands back this session's own state file;
@@ -59,14 +61,7 @@ def job_in_hand(cwd, root):
             return n
         if _lib.norm(d) == _lib.norm(root):
             break
-    newest = None
-    for n in nightly.find_now_files(root, limit=300):
-        try:
-            if newest is None or n.stat().st_mtime > newest.stat().st_mtime:
-                newest = n
-        except OSError:
-            pass
-    return newest
+    return None   # never guessed from the newest NOW.md: the job is the one the person names
 
 
 def recent_nows(root, skip):
@@ -123,6 +118,12 @@ def main():
         others = recent_nows(root, now)
         if others:
             parts.append("OTHER RECENT JOBS (NOW files, newest first): " + "; ".join("%s %s" % (dt, p) for dt, p in others))
+    else:
+        recent = recent_nows(root, None)
+        if recent:
+            parts.append("NO JOB LOADED: this conversation was not opened inside a job folder, so no job is taken on. "
+                         "When the person names a job, read its NOW.md before working on it. RECENT JOBS (NOW files, newest first): " +
+                         "; ".join("%s %s" % (dt, p) for dt, p in recent))
 
     if source in ("compact", "resume") and own.is_file():
         t = own.read_text("utf-8", "replace")
