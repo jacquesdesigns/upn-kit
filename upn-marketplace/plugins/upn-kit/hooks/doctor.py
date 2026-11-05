@@ -36,11 +36,23 @@ def lines():
             if size > INDEX_MAX_BYTES or n > INDEX_MAX_LINES:
                 out.append("RED: %s is %d bytes, %d lines (keep under %d bytes and %d lines; past 25KB entries drop silently)"
                            % (idx, size, n, INDEX_MAX_BYTES, INDEX_MAX_LINES))
+            # a file counts as indexed if MEMORY.md names it, or a hub file that is itself reached names it
+            # (Prompt 1 sets up this hub layout: the index lists hubs, each hub lists its facts)
             text = idx.read_text("utf-8", "replace")
             files = [f for f in m.glob("*.md") if f.name != "MEMORY.md"]
-            missing = [f.name for f in files if f.name not in text]
+            missing = [f for f in files if f.name not in text]
+            grew = True
+            while grew and missing:
+                grew = False
+                for f in [f for f in files if f not in missing]:
+                    t = f.read_text("utf-8", "replace")
+                    found = [g for g in missing if g.name in t]
+                    if found:
+                        missing = [g for g in missing if g not in found]
+                        grew = True
             if missing:
-                out.append("RED: %d memory file(s) not in the index, first: %s" % (len(missing), ", ".join(missing[:4])))
+                out.append("RED: %d memory file(s) not in the index or any hub it lists, first: %s"
+                           % (len(missing), ", ".join(f.name for f in missing[:4])))
         elif any(m.glob("*.md")):
             out.append("RED: %s has memory files but no MEMORY.md index" % m)
         if (root / "MEMORY.md").is_file() and idx.is_file():

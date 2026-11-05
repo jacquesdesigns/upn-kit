@@ -70,7 +70,10 @@ def main():
     (dropbox / "10350 MOHUP Oman AIG" / "brief.docx").write_text("x")
     mem = tmp / "claude-projects" / "mem"
     mem.mkdir(parents=True)
-    (mem / "MEMORY.md").write_text("# Memory\n- [Fees](fees.md)\n", encoding="utf-8")
+    (mem / "MEMORY.md").write_text("# Memory\n- [Fees](fees.md)\n- [Bids hub](hub-bids.md)\n", encoding="utf-8")
+    (mem / "hub-bids.md").write_text("---\nname: hub-bids\n---\n- [Pre-2021 attribution](bids-pre-2021-attribution.md)\n", encoding="utf-8")
+    (mem / "bids-pre-2021-attribution.md").write_text("---\nname: bids-pre-2021-attribution\n---\nPre-May-2021 work carries the old practice name.\n", encoding="utf-8")
+    (mem / "stray-fact.md").write_text("---\nname: stray-fact\n---\nListed nowhere.\n", encoding="utf-8")
     (mem / "fees.md").write_text("---\nname: fees\n---\nFee rule: see `upn/projects/gone--away/NOW.md`.\n", encoding="utf-8")
     (brain / "MEMORY.md").write_text("# second index\n", encoding="utf-8")
     cfg = {"brain": str(brain), "memory_dirs": [str(mem)], "dropbox_roots": [str(dropbox)], "context_window": 1000000}
@@ -265,6 +268,9 @@ def main():
     # ---- doctor + session start
     r = subprocess.run([PY, str(HERE / "doctor.py")], capture_output=True, text=True, encoding="utf-8", env=env)
     case("doctor: two indexes + dead path + em dash", "doctor.py", r.returncode == 0 and "two indexes" in r.stdout and "gone" in r.stdout and "em dash" in r.stdout, r.stdout.strip()[:140].replace("\n", " | "))
+    orphan = [l for l in r.stdout.splitlines() if "not in the index" in l]
+    case("doctor: a fact listed in a hub is not an orphan", "doctor.py", orphan and "bids-pre-2021-attribution" not in orphan[0] and "hub-bids" not in orphan[0], (orphan or ["(no orphan line)"])[0][:140])
+    case("doctor: a file in no index and no hub is still flagged", "doctor.py", orphan and "stray-fact.md" in orphan[0], (orphan or ["(no orphan line)"])[0][:140])
     (brain / "_state" / "2026-10-20-oldhand.md").write_text("# Old job\nOPEN: next = send the fee table\n- a fact\n", encoding="utf-8")
     _, out, _ = run_hook("session_start.py", dict(base, hook_event_name="SessionStart", source="startup", cwd=str(job)), env)
     ok = "JOB IN HAND" in out and "check the fee table" in out and "HANDOVER IS WAITING" in out and "DOCTOR" in out
