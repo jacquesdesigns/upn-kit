@@ -1,6 +1,22 @@
-# TESTS: UPN kit, 25 Oct 2026 (v1.0.0), retested 5 Nov 2026 (v1.1.0)
+# TESTS: UPN kit, 25 Oct 2026 (v1.0.0), retested 5 Nov 2026 (v1.1.0, then v1.1.1)
 
 Where each test ran is stated on its line. Mac is the build machine. PC is the studio Windows PC (Windows, PowerShell over ssh, user claude-remote, non-admin, Python 3.13.15, Node 24, Git 2.55). A failure stays a failure.
+
+## 5 Nov 2026: v1.1.1
+
+What changed: seven things found when Prompts 1 and 2 were run end to end in VS Code on the PC. Version 1.1.0 to 1.1.1. The self-test has 133 cases (126 before, plus 7 new ones below).
+
+| Fix | Where | Command | Result |
+|---|---|---|---|
+| 1. doctor no longer goes red on the hub layout Prompt 1 sets up: a fact file named in a hub that the index names counts as indexed; a file named nowhere is still flagged | Mac, PC | selftest.py: "doctor: a fact listed in a hub is not an orphan", "doctor: a file in no index and no hub is still flagged" | PASS on both |
+| 2. voice check: a double dash inside a path (`client--project` folders, a Windows path with a space such as `Second Brain`) is not a fault; a double dash between words in prose still is | Mac, PC | selftest.py: three new voice cases. The 1.1.0 check, given the same two paths, returned "double dash" for both | PASS on both |
+| 3. Prompt 1: "which computer is which" is now Step 1, so the role is set before the save point (now Step 1b) reads it | Mac | read the step headings in order: Step 0, Step 1 which computer, Step 1b save point | PASS |
+| 4. Prompts 1 and 2: anything I have to type (`/context`, `/reload-plugins`, a name, a path) is asked in plain text, "type it, then tell me", never in a question form that hides the box | Mac | read the rules list of both prompts and Prompt 2 Steps 3 and 4 | PASS (wording only; not run in a live Claude) |
+| 5. Prompt 2: frontend-design comes from the built-in marketplace `anthropic-plugin-directory` | Mac (claude 2.1.318) | claude plugin marketplace list (shows "anthropic-plugin-directory, Built in"); claude plugin details frontend-design@anthropic-plugin-directory (found, 1.1.1) | PASS |
+| 6a. Prompts call schtasks through PowerShell, because Git Bash rewrites `/query` | PC, Git Bash 2.55 | plain `schtasks /query` in Git Bash: "Invalid argument/option - 'C:/Program Files/Git/query'"; `cmd.exe /c "schtasks ..."` also fails (opens a cmd prompt); `powershell -NoProfile -Command "schtasks /query /tn '...' /fo list"` works in Git Bash and in PowerShell | PASS |
+| 6b. doctor reads the mirror task with `schtasks /query /tn <name> /v /fo csv`, not Get-ScheduledTaskInfo; robocopy results 1 to 7 count as fine, as its message always said | PC, non-admin over ssh | doctor.py with a real task name: 1.1.0 printed "could not read the Dropbox mirror task"; 1.1.1 read its last result (-2147160572, the same as schtasks shows). selftest.py: two new cases on the csv reader (day-first date, never-ran task) | PASS on both |
+| 7. Version 1.1.1 in both manifests; full self-test | Mac (claude 2.1.318) | claude plugin validate on both manifests; python3 selftest.py | PASS, 133 of 133 |
+| Same self-test | PC, kit copied to C:\Users\claude-remote\upn-kit-test\upn-kit-111 | python selftest.py | PASS, 133 of 133 |
 
 ## 5 Nov 2026: v1.1.0
 
