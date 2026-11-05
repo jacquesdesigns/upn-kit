@@ -2,6 +2,18 @@
 
 Where each test ran is stated on its line. Mac is the build machine. PC is the studio Windows PC (Windows, PowerShell over ssh, user claude-remote, non-admin, Python 3.13.15, Node 24, Git 2.55). A failure stays a failure.
 
+## 5 Nov 2026: v1.2.0, part B (gaps 4, 5, 7, 8 of the 5 Nov system audit)
+
+What changed: four pieces carried from our own system. The job's NOW file is kept fresh during the day, a long file is not read in full twice, and the doctor gains two checks. Part B adds 21 self-test cases.
+
+| Fix | Where | Command | Result |
+|---|---|---|---|
+| 4. New `hooks/latest.py` (PostToolUse on Write, Edit, MultiEdit, Bash, PowerShell): each write to this conversation's own notes file copies its title, OPEN / NOW / GATE / WAITING lines and six newest facts into the job's NOW.md as one "## LATEST (auto ...)" section, replaced in place. The job is the NOW.md of the folder opened, else of the newest file the conversation wrote; never the brain root, never from a subagent or another conversation's notes | Mac | selftest.py: "latest: notes copied into the NOW of the folder opened", "latest: replaced in place, never added twice (shell write)", "latest: other files and other conversations' notes leave NOW alone", "latest: opened at the root, the job comes from the files written", "latest: nothing written at the brain root" | PASS |
+| 5. `hooks/guards.py` refuses a full Read of a file over 30 KB this conversation already read, unless it changed since (size or time) or a line range is asked; a compaction or a clear empties the list (a SessionStart hook with matcher clear\|compact); a subagent keeps its own list. Our artifact half left out | Mac | selftest.py: ten "re-read:" cases (first read, second refused, the refusal says what to do, line range, small file twice, changed file, refused again, after a compaction, subagent) | PASS |
+| 7. `hooks/doctor.py` warns (AMBER) when a NOW.md has more than about 40 hand-written lines above its machine sections; the LATEST section and the NIGHT LOG are not counted | Mac | selftest.py: "doctor: a NOW file past 40 hand-written lines is warned", "doctor: LATEST and NIGHT LOG lines are not counted" | PASS |
+| 8. `hooks/doctor.py` goes RED on untracked tooling files (scripts and settings) the night save will not commit, reading TEXT, BIG and NEVER_COMMIT from nightly.py's source with ast, so the two cannot drift | Mac | selftest.py: "doctor: an untracked script the night save leaves out is red", "doctor: a type the night save takes is not flagged", "doctor: the type list is read from nightly.py, not a copy", "doctor: reads the real nightly.py list as it stands" | PASS |
+| Part B self-test before the merge with part A | Mac | python3 selftest.py | PASS, 154 of 154 |
+
 ## 5 Nov 2026: v1.1.1
 
 What changed: seven things found when Prompts 1 and 2 were run end to end in VS Code on the PC. Version 1.1.0 to 1.1.1. The self-test has 133 cases (126 before, plus 7 new ones below).
