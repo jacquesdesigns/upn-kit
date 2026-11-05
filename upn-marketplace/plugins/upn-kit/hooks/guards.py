@@ -14,6 +14,11 @@ connector's tools (mcp__claude_ai_Dropbox__*): read, list, search and get-link t
 passes only when its input says it adds a new file and cannot overwrite; move, delete, rename, copy, restore, update and
 anything unknown are blocked.
 Limit: a command that builds its target path at run time (python -c, a variable) cannot be read by a hook.
+
+Re-reads: a full Read of a file over 30 KB that this conversation has already read is refused, unless the file changed
+since (size or time) or a line range is asked (offset, limit or pages). Bids and tenders are long, and each re-read
+brings the handover line nearer. A compaction or a clear empties the list (the SessionStart hook with matcher
+"clear|compact" runs this file), because the file is then no longer in the conversation.
 """
 import os
 import re
@@ -223,10 +228,52 @@ def connector_block(tool, ti):
     return "the Dropbox connector tool %s changes or removes existing things (move, delete, rename, copy, restore, update); Claude may only read, list, search and add new files" % tool
 
 
+REREAD_BYTES = 30000
+
+
+def reads_file(d):
+    return _lib.session_file(d.get("session_id"), "reads" + (("-" + str(d["agent_id"])) if d.get("agent_id") else ""))
+
+
+def reread_block(d, ti):
+    """A reason when this is a full re-read of a big file the conversation already holds, unchanged. Records each read."""
+    path = ti.get("file_path") or ""
+    if not path:
+        return None
+    try:
+        st = os.stat(path)
+    except (OSError, ValueError):
+        return None
+    if any(ti.get(k) is not None for k in ("offset", "limit", "pages")):
+        return None
+    f = reads_file(d)
+    seen = _lib.load_json(f, {})
+    key = _lib.norm(path)
+    now = [st.st_size, st.st_mtime_ns]
+    if seen.get(key) == now and st.st_size > REREAD_BYTES:
+        return "%s (%d KB) is already in this conversation and has not changed since it was read" % (
+            os.path.basename(path), round(st.st_size / 1024))
+    seen[key] = now
+    _lib.dump_json(f, seen)
+    return None
+
+
 def main():
     d = _lib.read_input()
+    if d.get("hook_event_name") == "SessionStart":   # after a compaction or a clear nothing is held any more
+        try:
+            reads_file(d).unlink()
+        except OSError:
+            pass
+        return
     tool = d.get("tool_name", "")
     ti = d.get("tool_input") or {}
+    if tool == "Read":
+        why = reread_block(d, ti)
+        if why:
+            _lib.deny("ALREADY READ: %s. Use what you already have; to change it, use Edit; to look at one part again, Read "
+                      "with offset and limit (a line range)." % why)
+        return
     EXEMPT_BRAINS[:] = find_brain_in_dropbox(d.get("cwd"))
     why = None
     if tool in ("Edit", "MultiEdit", "NotebookEdit"):

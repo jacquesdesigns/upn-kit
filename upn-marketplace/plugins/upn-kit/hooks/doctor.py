@@ -4,9 +4,14 @@ Run by the session-start hook (its lines are shown to the person and given to Cl
   python doctor.py
 Checks: MEMORY.md index size; a second competing MEMORY.md at the brain root; memory files pointing at paths that no longer
 exist; em dashes in wiki pages changed this week; the Dropbox mirror ran this week; the memory folder is in the mirror.
+Also: a job's NOW.md with more than about 40 hand-written lines above its machine sections (AMBER, a warning); new
+tooling files (scripts, settings) that tonight's night save will not commit (RED; the types are read from nightly.py's
+own TEXT list, so the two cannot drift apart).
 The mirror checks need config.json keys "mirror_task" (Windows scheduled task name) and "mirror_script" (path of its script);
 without them those two checks are skipped, not guessed.
 """
+import ast
+import os
 import re
 import subprocess
 import sys
@@ -21,6 +26,80 @@ INDEX_MAX_LINES = 200
 DEAD_SHOWN = 8
 # 0 is clean; robocopy exits 1 to 7 when it copied fine; 267009 is "running now"
 TASK_OK = set(range(0, 8)) | {267009}
+NOW_MAX_LINES = 40
+MACHINE_HEADS = ("## NIGHT LOG", "## LATEST (auto")   # written by nightly.py and latest.py, not by hand
+NIGHTLY = Path(__file__).resolve().parent / "nightly.py"
+# scripts and settings: what a person or Claude makes to run the system, as opposed to documents and media
+TOOLING = {".ps1", ".psm1", ".bat", ".cmd", ".vbs", ".sh", ".py", ".js", ".mjs", ".cjs", ".ts", ".css", ".json", ".jsonl",
+           ".yml", ".yaml", ".toml", ".ini", ".cfg", ".xml", ".svg", ".reg"}
+UNTRACKED_SHOWN = 4
+
+
+def night_save_rules(path=NIGHTLY):
+    """TEXT, BIG and NEVER_COMMIT from nightly.py's source (read, never imported, so this check cannot drift from it)."""
+    want = {"TEXT": None, "BIG": None, "NEVER_COMMIT": None}
+    for node in ast.parse(Path(path).read_text("utf-8")).body:
+        if isinstance(node, ast.Assign):
+            for t in node.targets:
+                if isinstance(t, ast.Name) and t.id in want:
+                    want[t.id] = ast.literal_eval(node.value)
+    if want["TEXT"] is None:
+        raise ValueError("no TEXT list in %s" % path)
+    return {str(e).lower() for e in want["TEXT"]}, want["BIG"] or 2_000_000, tuple(want["NEVER_COMMIT"] or ())
+
+
+def hand_lines(text):
+    """Lines above the NIGHT LOG, not counting the LATEST section the hook writes."""
+    n, machine = 0, False
+    for line in text.splitlines():
+        if line.startswith("## NIGHT LOG"):
+            break
+        if line.startswith("## "):
+            machine = line.startswith(MACHINE_HEADS)
+        if not machine:
+            n += 1
+    return n
+
+
+def check_now_sizes(root):
+    import nightly
+    out = []
+    for p in nightly.find_now_files(root, limit=300):
+        try:
+            n = hand_lines(p.read_text("utf-8", "replace"))
+        except OSError:
+            continue
+        if n > NOW_MAX_LINES:
+            out.append((n, p))
+    out.sort(reverse=True)
+    return ["AMBER: %s has %d hand-written lines above its machine sections (about %d max); move settled detail to the wiki "
+            "or a file it links to" % (p, n, NOW_MAX_LINES) for n, p in out[:5]]
+
+
+def check_untracked_tooling(root):
+    """RED when new scripts or settings sit outside git and tonight's night save will leave them out."""
+    if _lib.role() != "main" or not (Path(root) / ".git").exists():
+        return []
+    r = subprocess.run(["git", "-C", str(root), "ls-files", "-z", "--others", "--exclude-standard"],
+                       capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=20)
+    if r.returncode != 0:
+        return []
+    text, big, never = night_save_rules()
+    loose = []
+    for f in r.stdout.split("\0"):
+        ext = os.path.splitext(f)[1].lower()
+        if not f or ext not in TOOLING or any(b in f.replace("\\", "/").lower() for b in never):
+            continue
+        try:
+            too_big = (Path(root) / f).stat().st_size > big
+        except OSError:
+            continue
+        if ext not in text or too_big:
+            loose.append(f)
+    if not loose:
+        return []
+    return ["RED: %d new tooling file(s) the night save will not commit (add the type to TEXT in nightly.py, or commit or "
+            "gitignore them): %s" % (len(loose), ", ".join(loose[:UNTRACKED_SHOWN]) + (" ..." if len(loose) > UNTRACKED_SHOWN else ""))]
 
 
 def parse_task_csv(text):
@@ -141,6 +220,11 @@ def lines():
         t = Path(script).read_text("utf-8", "replace").lower().replace("/", "\\")
         if ".claude\\projects" not in t and not any(str(m).lower().replace("/", "\\") in t for m in mems):
             out.append("RED: the memory folder is not in the mirror script %s" % script)
+    for check in (check_untracked_tooling, check_now_sizes):
+        try:
+            out.extend(check(root))
+        except Exception as e:
+            out.append("RED: doctor check %s could not run: %s" % (check.__name__, e))
     return out
 
 

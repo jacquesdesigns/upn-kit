@@ -393,6 +393,100 @@ def main():
     case("second machine: session start works in the Dropbox brain", "session_start.py", "JOB IN HAND" in out and not list(dbrain.glob("**/_state")), out[:100])
     (home / "config.json").write_text(json.dumps(cfg_main), encoding="utf-8")
 
+    # ======== v1.2.0 part B: LATEST in the job's NOW file, the re-read check, two doctor checks ========
+    (home / "config.json").write_text(json.dumps(cfg_main), encoding="utf-8")
+    # gap 4: latest.py copies this conversation's notes into the job's NOW.md, one section, replaced in place
+    sid_l = "latestab-0001"
+    notes = brain / "_state" / ("%s-latestab.md" % today)
+    notes.write_text("# Oman fee table checked\nOPEN: next = send the table to Jeremy\n- fee totals add up [verified]\n- old fact\n", encoding="utf-8")
+    base_l = dict(base, session_id=sid_l, cwd=str(job), transcript_path=str(tmp / "latest.jsonl"))
+    jl(tmp / "latest.jsonl", [user("check the fees")])
+    run_hook("latest.py", dict(base_l, hook_event_name="PostToolUse", tool_name="Write", tool_input={"file_path": str(notes), "content": "x"}), env)
+    nt = (job / "NOW.md").read_text("utf-8")
+    ok = nt.count("## LATEST (auto") == 1 and "Oman fee table checked" in nt and "send the table to Jeremy" in nt and nt.find("## LATEST") < nt.find("## next")
+    case("latest: notes copied into the NOW of the folder opened", "latest.py", ok, nt[:120].replace("\n", " | "))
+    notes.write_text("# Oman fee table sent\nOPEN: next = wait for Jeremy\n- table sent to Jeremy [verified]\n", encoding="utf-8")
+    run_hook("latest.py", dict(base_l, hook_event_name="PostToolUse", tool_name="Bash",
+                               tool_input={"command": "cat > \"%s\" <<'X'\n...\nX" % notes}), env)
+    nt = (job / "NOW.md").read_text("utf-8")
+    ok = nt.count("## LATEST (auto") == 1 and "table sent to Jeremy" in nt and "old fact" not in nt and "check the fee table before Friday" in nt
+    case("latest: replaced in place, never added twice (shell write)", "latest.py", ok, nt[:120].replace("\n", " | "))
+    before = (job / "NOW.md").read_text("utf-8")
+    run_hook("latest.py", dict(base_l, hook_event_name="PostToolUse", tool_name="Write", tool_input={"file_path": str(job / "draft.md"), "content": "x"}), env)
+    other = brain / "_state" / ("%s-someone.md" % today)
+    other.write_text("# Another conversation\n- not mine\n", encoding="utf-8")
+    run_hook("latest.py", dict(base_l, hook_event_name="PostToolUse", tool_name="Write", tool_input={"file_path": str(other), "content": "x"}), env)
+    case("latest: other files and other conversations' notes leave NOW alone", "latest.py", (job / "NOW.md").read_text("utf-8") == before, "unchanged" if (job / "NOW.md").read_text("utf-8") == before else "changed")
+    job2 = brain / "upn" / "projects" / "wb--albania-tourism"
+    jl(tmp / "latest.jsonl", [user("albania"), tool_use("Write", {"file_path": str(job2 / "notes" / "scope.md"), "content": "x"})])
+    run_hook("latest.py", dict(base_l, cwd=str(brain), hook_event_name="PostToolUse", tool_name="Edit", tool_input={"file_path": str(notes), "old_string": "a", "new_string": "b"}), env)
+    n2 = (job2 / "NOW.md").read_text("utf-8")
+    case("latest: opened at the root, the job comes from the files written", "latest.py", "## LATEST (auto" in n2 and "Oman fee table sent" in n2, n2[:120].replace("\n", " | "))
+    rootnow = brain / "NOW.md"
+    case("latest: nothing written at the brain root", "latest.py", not rootnow.exists(), "no root NOW.md")
+
+    # gap 5: guards.py refuses a full re-read of a big unchanged file
+    sid_r = "rereadab-0001"
+    big = job / "01 engine-room" / "working" / "tender.md"
+    big.write_text("tender line\n" * 4000, encoding="utf-8")
+    small = job / "01 engine-room" / "working" / "short.md"
+    small.write_text("short\n", encoding="utf-8")
+
+    def rd(label, inp, expect_deny, event="PreToolUse"):
+        _, out, _ = run_hook("guards.py", dict(base, session_id=sid_r, hook_event_name=event, tool_name="Read", tool_input=inp), env)
+        denied = '"permissionDecision": "deny"' in out
+        case("re-read: " + label, "guards.py", denied == expect_deny, ("denied " if denied else "allowed ") + out[:90])
+        return out
+    rd("first full read of a big file", {"file_path": str(big)}, False)
+    out = rd("second full read refused", {"file_path": str(big)}, True)
+    case("re-read: the refusal says what to do instead", "guards.py", "ALREADY READ" in out and "offset and limit" in out, out[:120])
+    rd("a line range is let through", {"file_path": str(big), "offset": 100, "limit": 50}, False)
+    rd("a small file read twice is fine", {"file_path": str(small)}, False)
+    rd("a small file, second time", {"file_path": str(small)}, False)
+    big.write_text("tender line changed\n" * 4000, encoding="utf-8")
+    rd("a big file that changed since is let through", {"file_path": str(big)}, False)
+    rd("and refused again once read unchanged", {"file_path": str(big)}, True)
+    run_hook("guards.py", dict(base, session_id=sid_r, hook_event_name="SessionStart", source="compact"), env)
+    rd("after a compaction the file can be read again", {"file_path": str(big)}, False)
+    _, out, _ = run_hook("guards.py", dict(base, session_id=sid_r, agent_id="sub1", hook_event_name="PreToolUse", tool_name="Read", tool_input={"file_path": str(big)}), env)
+    case("re-read: a subagent has its own list", "guards.py", out == "", out[:90] or "(silent)")
+
+    # gap 7: doctor warns on a NOW file grown too long; the LATEST section does not count
+    longjob = brain / "upn" / "projects" / "long--job"
+    longjob.mkdir(parents=True)
+    (longjob / "NOW.md").write_text("# NOW: long job\n" + "".join("- settled point %d\n" % i for i in range(45)) + "\n## NIGHT LOG\n- 2026-11-04: x\n", encoding="utf-8")
+    okjob = brain / "upn" / "projects" / "short--job"
+    okjob.mkdir(parents=True)
+    (okjob / "NOW.md").write_text("# NOW: short job\n## LATEST (auto, from conversation x)\n" + "".join("- fact %d\n" % i for i in range(20)) +
+                                  "\n## next\n" + "".join("- step %d\n" % i for i in range(30)) + "\n## NIGHT LOG\n" + "".join("- night %d\n" % i for i in range(20)), encoding="utf-8")
+    r = subprocess.run([PY, str(HERE / "doctor.py")], capture_output=True, text=True, encoding="utf-8", env=env)
+    amber = [l for l in r.stdout.splitlines() if l.startswith("AMBER") and "hand-written lines" in l]
+    case("doctor: a NOW file past 40 hand-written lines is warned", "doctor.py", any("long--job" in l for l in amber), (amber or ["(no warning)"])[0][:140])
+    case("doctor: LATEST and NIGHT LOG lines are not counted", "doctor.py", not any("short--job" in l for l in amber), "short--job not warned" if not any("short--job" in l for l in amber) else "warned")
+
+    # gap 8: doctor goes red on new tooling files the night save will not commit, from nightly.py's own TEXT list
+    if (brain / ".git").exists():
+        tools = brain / "_context" / "tools"
+        tools.mkdir(parents=True, exist_ok=True)
+        (tools / "remind.vbs").write_text("MsgBox 1\n", encoding="utf-8")
+        (tools / "helper.py").write_text("print(1)\n", encoding="utf-8")
+        r = subprocess.run([PY, str(HERE / "doctor.py")], capture_output=True, text=True, encoding="utf-8", env=env)
+        red = [l for l in r.stdout.splitlines() if "night save will not commit" in l]
+        case("doctor: an untracked script the night save leaves out is red", "doctor.py", red and "remind.vbs" in red[0], (red or ["(no red line)"])[0][:140])
+        case("doctor: a type the night save takes is not flagged", "doctor.py", red and "helper.py" not in red[0], (red or ["(no red line)"])[0][:140])
+        (tools / "remind.vbs").unlink()
+    else:
+        case("doctor: untracked tooling", "git", False, "git is not installed")
+    fake = tmp / "nightly-copy.py"
+    fake.write_text('BIG = 10\nTEXT = {".md", ".VBS"}\nNEVER_COMMIT = ("20. RAW/",)\n', encoding="utf-8")
+    probe = "import sys, doctor; t, b, n = doctor.night_save_rules(sys.argv[1]); print(sorted(t), b, n)"
+    r = subprocess.run([PY, "-c", probe, str(fake)], capture_output=True, text=True, cwd=str(HERE), env=env)
+    case("doctor: the type list is read from nightly.py, not a copy", "doctor.night_save_rules", r.stdout.strip() == "['.md', '.vbs'] 10 ('20. RAW/',)", (r.stdout + r.stderr).strip()[:120])
+    r = subprocess.run([PY, "-c", "import doctor, nightly; t, b, n = doctor.night_save_rules(); print(t == {e.lower() for e in nightly.TEXT} and b == nightly.BIG)"],
+                       capture_output=True, text=True, cwd=str(HERE), env=env)
+    case("doctor: reads the real nightly.py list as it stands", "doctor.night_save_rules", r.stdout.strip() == "True", (r.stdout + r.stderr).strip()[:120])
+    # ======== end of v1.2.0 part B ========
+
     fails = [x for x in RESULTS if not x[2]]
     print("\n%d cases, %d passed, %d failed" % (len(RESULTS), len(RESULTS) - len(fails), len(fails)))
     if keep:
