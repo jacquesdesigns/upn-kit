@@ -274,6 +274,14 @@ def main():
     orphan = [l for l in r.stdout.splitlines() if "not in the index" in l]
     case("doctor: a fact listed in a hub is not an orphan", "doctor.py", orphan and "bids-pre-2021-attribution" not in orphan[0] and "hub-bids" not in orphan[0], (orphan or ["(no orphan line)"])[0][:140])
     case("doctor: a file in no index and no hub is still flagged", "doctor.py", orphan and "stray-fact.md" in orphan[0], (orphan or ["(no orphan line)"])[0][:140])
+    sample = ('"HostName","TaskName","Next Run Time","Status","Logon Mode","Last Run Time","Last Result"\n'
+              '"PC","\\Brain Mirror","%s","Ready","Interactive only","%s","%s"\n')
+    probe = "import sys, time, doctor; ts, res = doctor.parse_task_csv(sys.stdin.read()); print(round((time.time() - ts) / 86400) if ts else None, res, res in doctor.TASK_OK)"
+    recent = time.strftime("%d/%m/%Y %H:%M:%S", time.localtime(time.time() - 2 * 86400))
+    r = subprocess.run([PY, "-c", probe], input=sample % ("N/A", recent, "1"), capture_output=True, text=True, cwd=str(HERE), env=env)
+    case("doctor: mirror task read from schtasks csv (day-first date, robocopy 1 is fine)", "doctor.parse_task_csv", r.stdout.split() == ["2", "1", "True"], (r.stdout + r.stderr).strip()[:120])
+    r = subprocess.run([PY, "-c", probe], input=sample % ("N/A", "30/11/1999 00:00:00", "267011"), capture_output=True, text=True, cwd=str(HERE), env=env)
+    case("doctor: mirror task that never ran reads as long ago", "doctor.parse_task_csv", r.stdout.split()[0].isdigit() and int(r.stdout.split()[0]) > 8, (r.stdout + r.stderr).strip()[:120])
     (brain / "_state" / "2026-10-20-oldhand.md").write_text("# Old job\nOPEN: next = send the fee table\n- a fact\n", encoding="utf-8")
     _, out, _ = run_hook("session_start.py", dict(base, hook_event_name="SessionStart", source="startup", cwd=str(job)), env)
     ok = "JOB IN HAND" in out and "check the fee table" in out and "HANDOVER IS WAITING" in out and "DOCTOR" in out

@@ -7,7 +7,6 @@ exist; em dashes in wiki pages changed this week; the Dropbox mirror ran this we
 The mirror checks need config.json keys "mirror_task" (Windows scheduled task name) and "mirror_script" (path of its script);
 without them those two checks are skipped, not guessed.
 """
-import json
 import re
 import subprocess
 import sys
@@ -20,6 +19,36 @@ import _lib  # noqa: E402
 INDEX_MAX_BYTES = 15000
 INDEX_MAX_LINES = 200
 DEAD_SHOWN = 8
+# 0 is clean; robocopy exits 1 to 7 when it copied fine; 267009 is "running now"
+TASK_OK = set(range(0, 8)) | {267009}
+
+
+def parse_task_csv(text):
+    """(last run as epoch seconds or None, last result as int or None) from `schtasks /query /tn X /v /fo csv`.
+    schtasks writes the date in the computer's short format, so day-first and month-first are both tried and the
+    latest reading that is not in the future wins."""
+    import csv
+    import datetime
+    rows = list(csv.reader(text.strip().splitlines()))
+    if len(rows) < 2:
+        return None, None
+    head, row = rows[0], rows[1]
+    col = {h.strip().lower(): i for i, h in enumerate(head)}
+    lr = row[col.get("last run time", 5)].strip()
+    res = row[col.get("last result", 6)].strip()
+    ts = None
+    for fmt in ("%d/%m/%Y %H:%M:%S", "%m/%d/%Y %H:%M:%S", "%Y-%m-%d %H:%M:%S", "%d.%m.%Y %H:%M:%S"):
+        try:
+            t = datetime.datetime.strptime(lr, fmt).timestamp()
+        except ValueError:
+            continue
+        if t <= time.time() + 86400 and (ts is None or t > ts):
+            ts = t
+    try:
+        res = int(res)
+    except ValueError:
+        res = None
+    return ts, res
 
 
 def lines():
@@ -93,18 +122,18 @@ def lines():
 
     task = cfg.get("mirror_task") if _lib.role() == "main" else None
     if task and sys.platform.startswith("win"):
+        # schtasks, not Get-ScheduledTaskInfo: the CIM cmdlets fail with "Access denied" for some non-admin users.
+        # Called from Python with a list of arguments, so no shell (Git Bash included) rewrites /query.
         try:
-            r = subprocess.run(["powershell", "-NoProfile", "-Command",
-                                "Get-ScheduledTaskInfo -TaskName '%s' | Select-Object LastRunTime,LastTaskResult | ConvertTo-Json" % task.replace("'", "''")],
-                               capture_output=True, text=True, timeout=15)
-            info = json.loads(r.stdout)
-            lr = info.get("LastRunTime")
-            m = re.search(r"/Date\((\d+)\)/", str(lr))
-            ts = int(m.group(1)) / 1000 if m else None
+            r = subprocess.run(["schtasks", "/query", "/tn", task, "/v", "/fo", "csv"],
+                               capture_output=True, text=True, errors="replace", timeout=15)
+            if r.returncode != 0:
+                raise RuntimeError(r.stderr.strip())
+            ts, res = parse_task_csv(r.stdout)
             if ts is None or time.time() - ts > 8 * 86400:
                 out.append("RED: the Dropbox mirror task '%s' has not run in the last 8 days" % task)
-            elif info.get("LastTaskResult") not in (0, 267009, 267011):
-                out.append("RED: the Dropbox mirror task '%s' last result was %s (0 is clean; robocopy 1 to 7 are also fine)" % (task, info.get("LastTaskResult")))
+            elif res not in TASK_OK:
+                out.append("RED: the Dropbox mirror task '%s' last result was %s (0 is clean; robocopy 1 to 7 are also fine)" % (task, res))
         except Exception:
             out.append("RED: could not read the Dropbox mirror task '%s'" % task)
     script = cfg.get("mirror_script") if _lib.role() == "main" else None
